@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Brain, RefreshCw, ChevronRight, Zap, Target, Sliders, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { toast } from 'sonner';
 
 interface Insight {
   id: string;
@@ -36,7 +37,14 @@ export const Insights = () => {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 2000);
+    const toastId = toast.loading("Recalibrating pattern recognition...");
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success("Recalibrated", {
+        id: toastId,
+        description: "Correlation engines updated with latest physiological samples."
+      });
+    }, 2000);
   };
 
   return (

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { toast } from 'sonner';
 
 interface TelemetryData {
   hr: number;
@@ -15,6 +16,7 @@ interface HardwareContextType {
   connect: () => Promise<void>;
   disconnect: () => void;
   error: string | null;
+  retry: () => Promise<void>;
 }
 
 const HardwareContext = createContext<HardwareContextType | undefined>(undefined);
@@ -37,7 +39,19 @@ export const HardwareProvider = ({ children }: { children: ReactNode }) => {
           stress: 12 + Math.floor(Math.random() * 5),
           stability: 98 + (Math.random() * 1.5)
         });
-        setBatteryLevel(prev => Math.max(0, prev - 0.01));
+        setBatteryLevel(prev => {
+          const newLevel = Math.max(0, prev - 0.01);
+          if (Math.floor(newLevel) === 15 && Math.floor(prev) === 16) {
+            toast.warning("Low battery detected on Vaga-X1 unit.");
+          }
+          return newLevel;
+        });
+
+        // random disconnect simulation (very rare)
+        if (Math.random() < 0.001) {
+          disconnect();
+          toast.error("Vaga-X1 connection lost. Signal interference detected.");
+        }
       }, 1500);
     } else {
       setTelemetry(null);
@@ -46,26 +60,48 @@ export const HardwareProvider = ({ children }: { children: ReactNode }) => {
   }, [isConnected]);
 
   const connect = async () => {
+    if (isConnected) return;
+    
     setIsConnecting(true);
     setError(null);
     
-    // Simulate tactical handshake
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    const toastId = toast.loading("Initiating hardware handshake...");
     
-    // 10% chance of failure to make it feel "real"
-    if (Math.random() < 0.1) {
-      setError("NO EARPIECE DETECTED IN PROXIMITY");
-      setIsConnecting(false);
-      return;
-    }
+    try {
+      // Simulate tactical handshake
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // 15% chance of failure to make it feel "real"
+          if (Math.random() < 0.15) {
+            reject(new Error("EARPIECE_NOT_FOUND"));
+          } else {
+            resolve(true);
+          }
+        }, 2000);
+      });
 
-    setIsConnected(true);
-    setIsConnecting(false);
+      setIsConnected(true);
+      toast.success("Vaga-X1 Link Established", { id: toastId });
+    } catch (err: any) {
+      const msg = "NO EARPIECE DETECTED IN PROXIMITY";
+      setError(msg);
+      toast.error(msg, { 
+        id: toastId,
+        description: "Ensure device is powered on and within 5 meters." 
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const retry = async () => {
+    await connect();
   };
 
   const disconnect = () => {
     setIsConnected(false);
     setTelemetry(null);
+    toast.message("Hardware session terminated.");
   };
 
   return (
@@ -76,6 +112,7 @@ export const HardwareProvider = ({ children }: { children: ReactNode }) => {
       telemetry, 
       connect, 
       disconnect,
+      retry,
       error 
     }}>
       {children}

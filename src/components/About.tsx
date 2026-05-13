@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   Shield, 
@@ -8,12 +8,38 @@ import {
   Zap, 
   Layers,
   Heart,
-  Target
+  Target,
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { HardwareUnit } from './HardwareUnit';
+import { toast } from 'sonner';
 
 export const About = () => {
+  const [isEnrolling, setIsEnrolling] = useState(false);
+
+  const handleEnroll = () => {
+    setIsEnrolling(true);
+    const toastId = toast.loading("Initializing protocol enrollment...");
+
+    setTimeout(() => {
+      toast.loading("Analyzing biometric profile...", { id: toastId });
+      
+      setTimeout(() => {
+        toast.loading("Synchronizing neural nodes...", { id: toastId });
+        
+        setTimeout(() => {
+          setIsEnrolling(false);
+          toast.success("Enrollment Successful", {
+            id: toastId,
+            description: "Welcome to VagaFlow Protocol v2.4. You are now part of the unbroken network."
+          });
+        }, 1500);
+      }, 1500);
+    }, 1500);
+  };
+
   return (
     <div className="p-4 sm:p-8 space-y-12 sm:space-y-20 max-w-5xl mx-auto pb-24 overflow-x-hidden">
       {/* Hero Section - The Manifest */}
@@ -160,8 +186,22 @@ export const About = () => {
       <div className="pt-10 text-center">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--separator)] to-transparent mb-16" />
         <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[var(--text-secondary)] mb-6">Established 2026. Built for the Unbroken.</p>
-        <button className="theme-btn-primary px-12 py-4 text-[10px] sm:text-xs">
-          ENROLL IN PROTOCOL
+        <button 
+          onClick={handleEnroll}
+          disabled={isEnrolling}
+          className="theme-btn-primary px-12 py-4 text-[10px] sm:text-xs flex items-center gap-3 mx-auto"
+        >
+          {isEnrolling ? (
+            <>
+              <Activity className="w-4 h-4 animate-spin text-cyan-400" />
+              SYNCHRONIZING...
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="w-4 h-4" />
+              ENROLL IN PROTOCOL
+            </>
+          )}
         </button>
       </div>
     </div>

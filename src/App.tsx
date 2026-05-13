@@ -22,6 +22,7 @@ import {
   FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Toaster } from 'sonner';
 import { cn } from './lib/utils';
 import { useFirebase } from './components/FirebaseProvider';
 import { Login } from './components/Login';
@@ -234,6 +235,21 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+      <Toaster 
+        theme={theme as any} 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--card-bg)',
+            color: 'var(--text-primary)',
+            borderColor: 'var(--card-border)',
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            fontWeight: '600',
+            letterSpacing: '0.05em'
+          }
+        }}
+      />
     </div>
   );
 }
