@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 256;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'settings']);
+      
+      // Sessions
+      match /sessions/{sessionId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(sessionId);
+        allow update, delete: if isOwner(userId);
+
+        match /samples/{sampleId} {
+          allow list, get: if isOwner(userId);
+          allow create: if isOwner(userId) && isValidId(sampleId);
+        }
+      }
+
+      // Stress Events
+      match /stressEvents/{eventId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(eventId);
+      }
+
+      // Insights
+      match /insights/{insightId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(insightId);
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-cyan: #06b6d4; /* cyan-500 equivalent */
+  --color-brand-blue: #081018; 
+  --color-brand-black: #05070a;
+  --color-slate-950: #020617;
+
+  /* Theme variables */
+  --surface-bg: var(--bg-primary);
+  --surface-text: var(--text-primary);
+}
+
+:root {
+  --bg-primary: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --card-bg: rgba(15, 23, 42, 0.05);
+  --card-border: rgba(15, 23, 42, 0.1);
+  --accent-cyan: #0891b2;
+  --separator: rgba(15, 23, 42, 0.1);
+}
+
+.dark {
+  --bg-primary: #05070a;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --accent-cyan: #22d3ee;
+  --separator: rgba(255, 255, 255, 0.1);
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans antialiased transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .theme-card {
+    @apply bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl backdrop-blur-sm;
+  }
+  
+  .theme-btn-primary {
+    @apply bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/50 text-[var(--accent-cyan)] font-bold uppercase tracking-widest hover:bg-[var(--accent-cyan)]/20 transition-colors;
+  }
+
+  .theme-btn-secondary {
+    @apply bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-secondary)] font-bold uppercase tracking-widest hover:bg-[var(--card-bg)]/20 transition-colors;
+  }
+}

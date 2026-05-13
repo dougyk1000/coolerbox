@@ -1,0 +1,8 @@
+{
+  "name": "VagaFlow",
+  "description": "A high-performance nervous-system operating system for physiological regulation and stress analysis.",
+  "requestFramePermissions": [
+    "bluetooth"
+  ],
+  "majorCapabilities": []
+}
