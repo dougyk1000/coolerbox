@@ -27,6 +27,7 @@ import { useFirebase } from './components/FirebaseProvider';
 import { Login } from './components/Login';
 import { useTheme } from './components/ThemeContext';
 import { LegalModal } from './components/Legal';
+import { useHardware } from './components/HardwareContext';
 
 // Components
 import { Home } from './components/Home';
@@ -42,21 +43,10 @@ import logoDark from './logo-dark.png';
 export default function App() {
   const { user, loading, signOut } = useFirebase();
   const { theme, toggleTheme } = useTheme();
+  const { isConnected, isConnecting, batteryLevel, connect } = useHardware();
   const [currentView, setCurrentView] = useState<View>('HOME');
-  const [isConnected, setIsConnected] = useState(false);
-  const [batteryLevel, setBatteryLevel] = useState(84);
   const [showSettings, setShowSettings] = useState(false);
   const [legal, setLegal] = useState<{ open: boolean; tab: 'TERMS' | 'PRIVACY' }>({ open: false, tab: 'TERMS' });
-
-  // Simulation of connection
-  useEffect(() => {
-    if (user) {
-      const timer = setTimeout(() => setIsConnected(true), 1500);
-      return () => clearTimeout(timer);
-    } else {
-      setIsConnected(false);
-    }
-  }, [user]);
 
   if (loading) {
     return (
@@ -101,16 +91,27 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6 text-[10px] tracking-[0.2em] font-bold uppercase transition-all">
-          <div className="flex items-center gap-2">
+          <div 
+            onClick={() => !isConnected && !isConnecting && connect()}
+            className={cn(
+              "flex items-center gap-2 cursor-pointer transition-colors",
+              !isConnected && !isConnecting && "hover:text-cyan-400"
+            )}
+          >
             <div className={cn(
               "w-2 h-2 rounded-full",
-              isConnected ? "bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" : "bg-[var(--text-primary)]/10"
+              isConnected ? "bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" : 
+              isConnecting ? "bg-amber-500 animate-pulse" : "bg-[var(--text-primary)]/10"
             )} />
-            <span className="hidden xs:inline-block">{isConnected ? "LINKED" : "SEARCHING"}</span>
+            <span className="hidden xs:inline-block">
+              {isConnected ? "LINKED" : isConnecting ? "CONNECTING..." : "NO EARPIECE"}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="opacity-40">BATT</span>
-            <span>{batteryLevel}%</span>
+            <span className={cn(!isConnected && "opacity-20")}>
+              {isConnected ? `${batteryLevel}%` : "N/A"}
+            </span>
           </div>
           <div className="hidden sm:block h-4 w-px border-l border-[var(--separator)]" />
           <div 

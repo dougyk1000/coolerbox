@@ -7,9 +7,13 @@ import {
   AlertTriangle, 
   ChevronRight,
   ShieldAlert,
-  Mic2
+  Mic2,
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useHardware } from './HardwareContext';
+import { HardwareUnit } from './HardwareUnit';
 
 const trainingModes = [
   {
@@ -47,6 +51,7 @@ const trainingModes = [
 ];
 
 export const Training = () => {
+  const { isConnected, isConnecting, connect, error } = useHardware();
   const [activeModule, setActiveModule] = React.useState<string | null>(null);
   const [count, setCount] = React.useState(0);
   const [score, setScore] = React.useState(0);
@@ -59,7 +64,7 @@ export const Training = () => {
 
   // Module interaction logic
   React.useEffect(() => {
-    if (!activeModule || isComplete) return;
+    if (!activeModule || isComplete || !isConnected) return;
 
     const timer = setInterval(() => {
       setProgress(p => {
@@ -112,6 +117,44 @@ export const Training = () => {
     setProgress(0);
     setStressLevel(0);
   };
+
+  if (!isConnected) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-8">
+        <HardwareUnit className="w-48 h-48 opacity-10" glow={false} />
+        <div className="space-y-2">
+          <h2 className="text-xl font-light uppercase tracking-tight text-[var(--text-primary)]">Link Interrupted</h2>
+          <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">
+            Training simulations require real-time biometric feedback loops to adjust load and stimulus.
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={connect}
+          disabled={isConnecting}
+          className="theme-btn-primary px-10 py-3 text-[10px] font-bold tracking-widest flex items-center gap-3"
+        >
+          {isConnecting ? (
+            <>
+              <Activity className="w-4 h-4 animate-spin" />
+              SYNCHRONIZING...
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="w-4 h-4" />
+              ESTABLISH BIOMETRIC LINK
+            </>
+          )}
+        </motion.button>
+        {error && (
+          <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (activeModule) {
     const mode = trainingModes.find(m => m.id === activeModule);

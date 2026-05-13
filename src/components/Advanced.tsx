@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BarChart3, Dumbbell, Brain, ChevronRight, Zap, Target, TrendingUp } from 'lucide-react';
+import { BarChart3, Dumbbell, Brain, ChevronRight, Zap, Target, TrendingUp, ShieldCheck, Activity, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useHardware } from './HardwareContext';
+import { HardwareUnit } from './HardwareUnit';
 
 // Import the specialized views
 import { Analytics } from './Analytics';
@@ -11,7 +13,61 @@ import { Insights } from './Insights';
 type AdvancedTab = 'ANALYTICS' | 'TRAINING' | 'INSIGHTS' | 'MENU';
 
 export const Advanced = () => {
+  const { isConnected, isConnecting, connect, error } = useHardware();
   const [activeTab, setActiveTab] = useState<AdvancedTab>('MENU');
+
+  if (!isConnected) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-8">
+        <div className="relative">
+          <HardwareUnit className="w-48 h-48 opacity-10" glow={false} />
+          <motion.div 
+            animate={{ 
+              opacity: [0.5, 1, 0.5],
+              scale: [0.95, 1.05, 0.95]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <AlertCircle className="w-12 h-12 text-red-500/40" />
+          </motion.div>
+        </div>
+        
+        <div className="space-y-2">
+          <h2 className="text-xl font-light uppercase tracking-tight text-[var(--text-primary)]">System Lab Locked</h2>
+          <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">
+            Advanced analytics and pattern recognition require active telemetry synchronization from your Vaga-X1 unit.
+          </p>
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={connect}
+          disabled={isConnecting}
+          className="theme-btn-primary px-10 py-3 text-[10px] font-bold tracking-widest flex items-center gap-3"
+        >
+          {isConnecting ? (
+            <>
+              <Activity className="w-4 h-4 animate-spin" />
+              SYNCHRONIZING...
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="w-4 h-4" />
+              ESTABLISH UNIT LINK
+            </>
+          )}
+        </motion.button>
+
+        {error && (
+          <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   const menuItems = [
     { 

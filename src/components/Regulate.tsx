@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Volume2, VolumeX, Shield, ShieldCheck } from 'lucide-react';
+import { Volume2, VolumeX, Shield, ShieldCheck, Activity, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { HardwareUnit } from './HardwareUnit';
+import { useHardware } from './HardwareContext';
 
 export const Regulate = ({ onEnd }: { onEnd: () => void }) => {
+  const { isConnected, isConnecting, connect, error } = useHardware();
   const [phase, setPhase] = useState<'INHALE' | 'EXHALE' | 'HOLD'>('INHALE');
   const [timer, setTimer] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [breaths, setBreaths] = useState(0);
 
-  // Simple breathing cycle: 4s inhale, 6s exhale
+  // Simple breathing cycle
   useEffect(() => {
+    if (!isConnected) return;
     let timeout: any;
     
     const cycle = () => {
@@ -32,9 +35,72 @@ export const Regulate = ({ onEnd }: { onEnd: () => void }) => {
   }, [phase]);
 
   useEffect(() => {
+    if (!isConnected) return;
     const interval = setInterval(() => setTimer(t => t + 1), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isConnected]);
+
+  if (!isConnected) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-8">
+        <div className="relative">
+          <HardwareUnit className="w-48 h-48 opacity-20" glow={false} />
+          <motion.div 
+            animate={{ 
+              opacity: [0.5, 1, 0.5],
+              scale: [0.95, 1.05, 0.95]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <AlertCircle className="w-12 h-12 text-red-500/40" />
+          </motion.div>
+        </div>
+        
+        <div className="space-y-2">
+          <h2 className="text-xl font-light uppercase tracking-tight text-[var(--text-primary)]">Hardware Link Required</h2>
+          <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">
+            Regulation modules require active telemetry from the Vaga-X1 unit to synchronize resonance algorithms.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={connect}
+            disabled={isConnecting}
+            className="theme-btn-primary px-10 py-3 text-[10px] font-bold tracking-widest flex items-center gap-3"
+          >
+            {isConnecting ? (
+              <>
+                <Activity className="w-4 h-4 animate-spin" />
+                INITIATING HANDSHAKE...
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                ESTABLISH LINK
+              </>
+            )}
+          </motion.button>
+          
+          <button 
+            onClick={onEnd}
+            className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            RETURN TO CORE
+          </button>
+        </div>
+
+        {error && (
+          <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
